@@ -17,10 +17,12 @@ so the player __init__ method will only take one parameter, player_position (A,B
 with 2  data members, a player_list and a turn_list. these data members will initially be empty and updated in the play_game method.
 
 3. Determining how to implement get_space_name method in the Players class for different player positions
+if steps = -1 return H
+if steps = 0 return R
 if steps = 57 return E
-if steps > 50: take get_token_step_count - 50, return Letter of starting position + result as string (Ex: 'A3')
-for 1-50 steps taken: for A, just return number of steps taken. For B,C,D: if starting location + steps taken < 56, return starting
-location + steps taken. if > 56: return get_token_step_count- (56 - starting)+ 1
+if steps > 50 and steps < 57: take get_token_step_count - 50, return Letter of starting position + result as string (Ex: 'A3')
+for 1-50 steps taken: for A, just return number of steps taken. For B,C,D: if starting location + steps taken <= 56, return starting
+location + steps taken - 1. if = 57: return 56. if > 57: return steps_taken - (56 - starting space + 1)
 
 4. Determining how to implement move_token method in the LudoGame class and what parameters need to be updated after the move of the token
 move tokens and update p/q_token_location based on move priority. also update steps taken for moved piece.  if the tokens go on the same space (if get_space_name is the same for both players),
@@ -45,6 +47,7 @@ if two tokens land on the same spot from the same player, the is_stacked data me
 move on subsequent rolls.
 """
 
+
 class Player:
     """
     This class represents a player in the Ludo game. Each player has a certain starting position.
@@ -54,31 +57,160 @@ class Player:
     def __init__(self, player_position):
         """
         This method initializes a Player object representing the data associated with a player in the Ludo Game.
-        it contains 9 (possibly more) data members: position, start_space, end_space, p_steps,  p_token_location,
-        q_steps, q_token_location, current_state, and is_stacked
+        it contains 10 (possibly more) data members: position, start_space, end_space, p_steps,  p_token_location,
+        q_steps, q_token_location, current_state, is_stacked, finished_space
         """
+        self._position = player_position
+        if self._position == "A":
+            self._start_space = 1
+            self._end_space = 50
+        elif self._position == "B":
+            self._start_space = 15
+            self._end_space = 8
+        elif self._position == "C":
+            self._start_space = 29
+            self._end_space = 22
+        elif self._position == "D":
+            self._start_space = 43
+            self._end_space = 36
+        self._p_steps = 0
+        self._p_token_location = "H"
+        self._q_steps = 0
+        self._q_token_location = "H"
+        self._current_state = "Playing"
+        self._is_stacked = False
+        self._finished_space = "E"
 
     def get_completed(self):
         """
         This method takes no parameters and returns true or false depending on if the player completed the game or not.
         """
+        if self._current_state == "Won":
+            return True
+        elif self._current_state == "Playing":
+            return False
 
     def get_token_p_step_count(self):
         """
         This method takes no parameters and returns the total number of steps token p has taken.
         """
+        return self._p_steps
 
     def get_token_q_step_count(self):
         """
         This method takes no parameters and returns the total number of steps token q has taken.
         """
+        return self._q_steps
 
-    def get_space_name(self, steps):
+    def set_token_p_step_count(self, p_steps):
         """
-        This method takes the number of steps a token has taken as a parameter and returns the name of the space the
-        token has landed on as a string
+        This method takes a number of steps as a parameter and increments (or decrements if negative parameter)
+        the token_step_count. it then calls set_p_space_name with the new p_space to update the current space.
         """
+        if p_steps == "Home":
+            self._p_steps = 0
+        else:
+            self._p_steps = self._p_steps + p_steps
+            if (self._p_steps > 57) and (self._p_steps <= 62):
+                kickback = (self._p_steps - 57)
+                if kickback == 1:
+                    self._p_steps = 56
+                elif kickback == 2:
+                    self._p_steps = 55
+                elif kickback == 3:
+                    self._p_steps = 54
+                elif kickback == 4:
+                    self._p_steps = 53
+                elif kickback == 5:
+                    self._p_steps = 52
+        self.set_p_space_name(self._p_steps)
 
+    def set_token_q_step_count(self, q_steps):
+        """
+        This method takes a number of steps as a parameter and increments (or decrements if negative parameter)
+        the token_step_count. it then calls set_q_space_name with the new q_space to update the current space.
+        """
+        if q_steps == "Home":
+            self._q_steps = 0
+        else:
+            self._q_steps = self._q_steps + q_steps
+            if (self._q_steps > 57) and (self._q_steps <= 62):
+                kickback = (self._q_steps - 57)
+                if kickback == 1:
+                    self._q_steps = 56
+                elif kickback == 2:
+                    self._q_steps = 55
+                elif kickback == 3:
+                    self._q_steps = 54
+                elif kickback == 4:
+                    self._q_steps = 53
+                elif kickback == 5:
+                    self._q_steps = 52
+        self.set_q_space_name(self._q_steps)
+
+    def get_p_space_name(self):
+        """
+        This method returns the name of the space the p token is currently on as a string
+        """
+        return self._p_token_location
+
+    def get_q_space_name(self):
+        """
+        This method returns the name of the space the token is currently on as a string
+        """
+        return self._q_token_location
+
+    def set_p_space_name(self, p_steps):
+        """
+        This method takes the number of steps the p token has taken as a parameter and sets the name of the current token location.
+        """
+        if p_steps == -1:
+            self._p_token_location = "H"
+        elif p_steps == 0:
+            self._p_token_location = "R"
+        elif p_steps == 57:
+            self._p_token_location = "E"
+        elif (p_steps > 50) and (p_steps < 57):
+            number = p_steps - 50
+            self._p_token_location = self._position + str(number)
+        elif (p_steps >= 1) and (p_steps <= 50):
+            if self._position == "A":
+                self._p_token_location = p_steps
+            else:
+                if (self._start_space + p_steps) <= 56:
+                    self._p_token_location = self._start_space + p_steps - 1
+                elif (self._start_space + p_steps) == 57:
+                    self._p_token_location = 56
+                elif (self._start_space + p_steps) > 57:
+                    self._p_token_location = p_steps - (56 - self._start_space + 1)
+        else:
+            print("Invalid Move!")
+
+    def set_q_space_name(self, q_steps):
+        """
+        This method takes the number of steps the p token has taken as a parameter and sets the name of the current token location.
+        """
+        if q_steps == -1:
+            self._q_token_location = "H"
+        elif q_steps == 0:
+            self._q_token_location = "R"
+        elif q_steps == 57:
+            self._q_token_location = "E"
+        elif (q_steps > 50) and (q_steps < 57):
+            number = q_steps - 50
+            self._q_token_location = self._position + str(number)
+        elif (q_steps >= 1) and (q_steps <= 50):
+            if self._position == "A":
+                self._q_token_location = q_steps
+            else:
+                if (self._start_space + q_steps) <= 56:
+                    self._q_token_location = self._start_space + q_steps - 1
+                elif (self._start_space + q_steps) == 57:
+                    self._q_token_location = 56
+                elif (self._start_space + q_steps) > 57:
+                    self._q_token_location = q_steps - (56 - self._start_space + 1)
+        else:
+            print("Invalid Move!")
 
 
 class LudoGame:
@@ -112,3 +244,10 @@ class LudoGame:
         it will move a single token along the board and update a tokens total steps, will kick out opponent as needed,
         and will be used by the play game method.
         """
+
+
+player_B = Player("B")
+player_B.set_token_p_step_count(63)
+print(player_B.get_p_space_name())
+
+
