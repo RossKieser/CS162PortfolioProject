@@ -81,6 +81,12 @@ class Player:
         self._is_stacked = False
         self._finished_space = "E"
 
+    def get_position(self):
+        """
+        This method takes no parameters and returns the position of the player
+        """
+        return self._position
+
     def get_completed(self):
         """
         This method takes no parameters and returns true or false depending on if the player completed the game or not.
@@ -302,16 +308,82 @@ class LudoGame:
             current_player_position = turn[0]               # extract which player is currently moving from the turn tuple
             current_player = self.get_player_by_position(current_player_position)   # get the current player object via get_player_by_position
             if current_player != "Player not found!":                               # continue the current iteration only if an active player object is found
-                current_roll = turn[1]
-                if current_roll == 6:                                                       # if a 6 is rolled, the highest priority is moving from home
-                    if current_player.get_p_space_name() == "H":
-                        self.move_token(current_player, "p", "Ready")
-                    elif current_player.get_q_space_name() == "H":                          # Move p or q out of home if possible
-                        self.move_token(current_player, "q", "Ready")
-                    elif current_player.get_get_token_p_step_count() == 51:
-                        self.move_token(current_player, "p", 6)
-                    elif current_player.get_get_token_q_step_count() == 51:                 # Move p or q to E if 6 away from goal (E)
-                        self.move_token(current_player, "q", 6)
+                if current_player.get_completed() == False:                         # If the current player has already finished, move to next turn
+                    current_roll = turn[1]
+                    if current_roll == 6:                                                   # if a 6 is rolled, the highest priority is moving from home
+                        if current_player.get_p_space_name() == "H":
+                            self.move_token(current_player, "p", "Ready")
+                        elif current_player.get_q_space_name() == "H":                      # Move p or q out of home if possible
+                            self.move_token(current_player, "q", "Ready")
+                        elif current_player.get_token_p_step_count() == 51:
+                            self.move_token(current_player, "p", 6)
+                        elif current_player.get_token_q_step_count() == 51:                 # Move p or q to E if 6 away from goal (E)
+                            self.move_token(current_player, "q", 6)
+                        elif self.target_in_range(current_player, 6) == (True, "p"):        # move p or q if within range to knock back opponent to home
+                            self.move_token(current_player, "p", 6)
+                            for player in self.get_players_list():                          # Kick all pieces back home landed on by current player
+                                if player != current_player:
+                                    if current_player.get_space_name(current_player.get_token_p_step_count()) == player.get_space_name(player.get_token_p_step_count()):
+                                        self.move_token(player, "p", "Home")
+                                    if current_player.get_space_name(current_player.get_token_p_step_count()) == player.get_space_name(player.get_token_q_step_count()):
+                                        self.move_token(player, "q", "Home")
+                        elif self.target_in_range(current_player, 6) == (True, "q"):        # move p or q if within range to knock back opponent to home
+                            self.move_token(current_player, "q", 6)
+                            for player in self.get_players_list():                          # Kick all pieces back home landed on by current player
+                                if player != current_player:
+                                    if current_player.get_space_name(current_player.get_token_q_step_count()) == player.get_space_name(player.get_token_p_step_count()):
+                                        self.move_token(player, "p", "Home")
+                                    if current_player.get_space_name(current_player.get_token_q_step_count()) == player.get_space_name(player.get_token_q_step_count()):
+                                        self.move_token(player, "q", "Home")
+                        elif current_player.get_token_p_step_count() <= current_player.get_token_q_step_count():
+                            self.move_token(current_player, "p", 6)
+                        elif current_player.get_token_p_step_count() > current_player.get_token_q_step_count():     # Move whichever token is furthest from the end
+                            self.move_token(current_player, "q", 6)
+                    else:
+                        if current_player.get_token_p_step_count() == 57 - current_roll:                            # Move token if one can move exactly to goal (E)
+                            self.move_token(current_player, "p", current_roll)
+                        elif current_player.get_token_q_step_count() == 57 - current_roll:
+                            self.move_token(current_player, "q", current_roll)
+                        elif self.target_in_range(current_player, current_roll) == (True, "p"):                     # move p or q if within range to knock back opponent to home
+                            self.move_token(current_player, "p", current_roll)
+                            for player in self.get_players_list():                                                  # Kick all pieces back home landed on by current player
+                                if player != current_player:
+                                    if current_player.get_space_name(current_player.get_token_p_step_count()) == player.get_space_name(player.get_token_p_step_count()):
+                                        self.move_token(player, "p", "Home")
+                                    if current_player.get_space_name(current_player.get_token_p_step_count()) == player.get_space_name(player.get_token_q_step_count()):
+                                        self.move_token(player, "q", "Home")
+                        elif self.target_in_range(current_player, current_roll) == (True, "q"):                     # move p or q if within range to knock back opponent to home
+                            self.move_token(current_player, "q", current_roll)
+                            for player in self.get_players_list():                                                  # Kick all pieces back home landed on by current player
+                                if player != current_player:
+                                    if current_player.get_space_name(current_player.get_token_q_step_count()) == player.get_space_name(player.get_token_p_step_count()):
+                                        self.move_token(player, "p", "Home")
+                                    if current_player.get_space_name(current_player.get_token_q_step_count()) == player.get_space_name(player.get_token_q_step_count()):
+                                        self.move_token(player, "q", "Home")
+                        elif current_player.get_token_p_step_count() <= current_player.get_token_q_step_count():
+                            self.move_token(current_player, "p", current_roll)
+                        elif current_player.get_token_p_step_count() > current_player.get_token_q_step_count():     # Move whichever token is furthest from the end
+                            self.move_token(current_player, "q", current_roll)
+        current_positions = []
+        for player in self.get_players_list():
+            current_positions.append(player.get_p_space_name())
+            current_positions.append(player.get_q_space_name())
+        return current_positions
+
+
+
+
+    def target_in_range(self, current_player, roll):
+        """
+        This method takes two parameters (current_player object, and roll) and returns True/False and which token is in range based on if a token is within range to return another player back to home or not
+        """
+        for player in self.get_players_list():
+            if player != current_player:
+                if (current_player.get_space_name(current_player.get_token_p_step_count()+roll) == player.get_space_name(player.get_token_p_step_count()+roll)) or (current_player.get_space_name(current_player.get_token_p_step_count()+roll) == player.get_space_name(player.get_token_q_step_count()+roll)):
+                    return True, "p"
+                elif (current_player.get_space_name(current_player.get_token_q_step_count()+roll) == player.get_space_name(player.get_token_p_step_count()+roll)) or (current_player.get_space_name(current_player.get_token_q_step_count()+roll) == player.get_space_name(player.get_token_q_step_count()+roll)):
+                    return True, "q"
+        return False, None
 
 
 
@@ -321,7 +393,7 @@ class LudoGame:
         returns Player Not Found! if no player at that position does not exist.
         """
         for player in self.get_players_list():
-            if player == player_position:
+            if player.get_position() == player_position:
                 return player
         return "Player not found!"
 
@@ -339,21 +411,12 @@ class LudoGame:
         elif token_name == "q":
             player.set_token_q_step_count(steps)
 
+        if (player.get_token_p_step_count() == 57) and (player.get_token_q_step_count() == 57):
+            player.set_completed("Won")
+
         if (player.get_token_p_step_count() == -1) or (player.get_token_q_step_count() == -1):
             player.set_is_stacked(False)
-        elif (player.get_p_space_name() == player.get_q_space_name()) and (player.get_token_p_step_count() > 0) and (player.get_token_q_step_step_count() > 0):
+        elif (player.get_p_space_name() == player.get_q_space_name()) and (player.get_token_p_step_count() > 0) and (player.get_token_q_step_count() > 0):
             player.set_is_stacked(True)
 
 
-player_B = Player("B")
-player_B.set_token_p_step_count(57)
-print(player_B.get_p_space_name())
-
-game = LudoGame()
-print(game.get_players_list())
-print(game.get_turns_list())
-players = ["A", "B", "C"]
-turns = [('A', 6), ('A', 4), ('A', 5), ('A', 4), ('B', 6), ('B', 4), ('B', 1), ('B', 2), ('A', 6), ('A', 4), ('A', 6), ('A', 3), ('A', 5), ('A', 1), ('A', 5), ('A', 4)]
-game.play_game(players, turns)
-print(game.get_players_list())
-print(game.get_turns_list())
