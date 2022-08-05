@@ -204,14 +204,14 @@ class Player:
             return self._position + str(number)
         elif (total_steps >= 1) and (total_steps <= 50):
             if self._position == "A":
-                return total_steps
+                return str(total_steps)
             else:
                 if (self._start_space + total_steps) <= 56:
-                    return self._start_space + total_steps - 1
+                    return str(self._start_space + total_steps - 1)
                 elif (self._start_space + total_steps) == 57:
-                    return 56
+                    return str(56)
                 elif (self._start_space + total_steps) > 57:
-                    return total_steps - (56 - self._start_space + 1)
+                    return str(total_steps - (56 - self._start_space + 1))
         else:
             pass
 
