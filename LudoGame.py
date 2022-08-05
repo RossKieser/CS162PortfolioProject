@@ -90,6 +90,25 @@ class Player:
         elif self._current_state == "Playing":
             return False
 
+    def set_completed(self, current_state):
+        """
+        This method takes one parameter (current_state) and sets the _current_state data member accordingly.
+        """
+        self._current_state = current_state
+
+    def get_is_stacked(self):
+        """
+        This method takes no parameters and returns whether or not the players tokens are stacked.
+        """
+        return self._is_stacked
+
+    def set_is_stacked(self, is_stacked):
+        """
+        This method takes one parameter (is_stacked) and sets the _is_stacked data member accordingly.
+        """
+        self._is_stacked = is_stacked
+
+
     def get_token_p_step_count(self):
         """
         This method takes no parameters and returns the total number of steps token p has taken.
@@ -108,6 +127,8 @@ class Player:
         the token_step_count. it then calls set_p_space_name with the new p_space to update the current space.
         """
         if p_steps == "Home":
+            self._p_steps = -1
+        elif p_steps == "Ready":
             self._p_steps = 0
         else:
             self._p_steps = self._p_steps + p_steps
@@ -131,6 +152,8 @@ class Player:
         the token_step_count. it then calls set_q_space_name with the new q_space to update the current space.
         """
         if q_steps == "Home":
+            self._q_steps = -1
+        elif q_steps == "Ready":
             self._q_steps = 0
         else:
             self._q_steps = self._q_steps + q_steps
@@ -150,15 +173,41 @@ class Player:
 
     def get_p_space_name(self):
         """
-        This method returns the name of the space the p token is currently on as a string
+        This method returns the name of the space the p token is currently on as a string.
         """
         return self._p_token_location
 
     def get_q_space_name(self):
         """
-        This method returns the name of the space the token is currently on as a string
+        This method returns the name of the space the token is currently on as a string.
         """
         return self._q_token_location
+
+    def get_space_name(self, total_steps):
+        """
+        This method takes the total steps moved and returns the name of the space landed on based on starting location.
+        """
+        if total_steps == -1:
+            return "H"
+        elif total_steps == 0:
+            return "R"
+        elif total_steps == 57:
+            return "E"
+        elif (total_steps > 50) and (total_steps < 57):
+            number = total_steps - 50
+            return self._position + str(number)
+        elif (total_steps >= 1) and (total_steps <= 50):
+            if self._position == "A":
+                return total_steps
+            else:
+                if (self._start_space + total_steps) <= 56:
+                    return self._start_space + total_steps - 1
+                elif (self._start_space + total_steps) == 57:
+                    return 56
+                elif (self._start_space + total_steps) > 57:
+                    return total_steps - (56 - self._start_space + 1)
+        else:
+            pass
 
     def set_p_space_name(self, p_steps):
         """
@@ -184,7 +233,7 @@ class Player:
                 elif (self._start_space + p_steps) > 57:
                     self._p_token_location = p_steps - (56 - self._start_space + 1)
         else:
-            print("Invalid Move!")
+            pass
 
     def set_q_space_name(self, q_steps):
         """
@@ -210,7 +259,7 @@ class Player:
                 elif (self._start_space + q_steps) > 57:
                     self._q_token_location = q_steps - (56 - self._start_space + 1)
         else:
-            print("Invalid Move!")
+            pass
 
 
 class LudoGame:
@@ -223,6 +272,20 @@ class LudoGame:
         This method initializes the LudoGame object with 2 (possibly more) data members:
         turns_list and players_list when a LudoGame object is created
         """
+        self._turns_list = []
+        self._players_list = []
+
+    def get_turns_list(self):
+        """
+        This method returns the turns_list of the current LudoGame
+        """
+        return self._turns_list
+
+    def get_players_list(self):
+        """
+        This method returns the players_list of the current LudoGame
+        """
+        return self._players_list
 
     def play_game(self, player_list, turn_list):
         """
@@ -231,12 +294,36 @@ class LudoGame:
         updates the players game state (finished or not), and returns a list of strings representing the current
         location of all tokens in the game.
         """
+        for player in player_list:                          # create a player object and save to _players_list data member
+            self.get_players_list().append(Player(player))
+        for turn in turn_list:                              # append each turn tuple (player, roll) to _turns_list data member
+            self.get_turns_list().append(turn)
+        for turn in self.get_turns_list():                  # iterate through every turn tuple in _turns_list
+            current_player_position = turn[0]               # extract which player is currently moving from the turn tuple
+            current_player = self.get_player_by_position(current_player_position)   # get the current player object via get_player_by_position
+            if current_player != "Player not found!":                               # continue the current iteration only if an active player object is found
+                current_roll = turn[1]
+                if current_roll == 6:                                                       # if a 6 is rolled, the highest priority is moving from home
+                    if current_player.get_p_space_name() == "H":
+                        self.move_token(current_player, "p", "Ready")
+                    elif current_player.get_q_space_name() == "H":                          # Move p or q out of home if possible
+                        self.move_token(current_player, "q", "Ready")
+                    elif current_player.get_get_token_p_step_count() == 51:
+                        self.move_token(current_player, "p", 6)
+                    elif current_player.get_get_token_q_step_count() == 51:                 # Move p or q to E if 6 away from goal (E)
+                        self.move_token(current_player, "q", 6)
+
+
 
     def get_player_by_position(self, player_position):
         """
         This method takes a players position (A,B,C,D) as a string as a parameter and returns that player object.
         returns Player Not Found! if no player at that position does not exist.
         """
+        for player in self.get_players_list():
+            if player == player_position:
+                return player
+        return "Player not found!"
 
     def move_token(self, player, token_name, steps):
         """
@@ -244,10 +331,29 @@ class LudoGame:
         it will move a single token along the board and update a tokens total steps, will kick out opponent as needed,
         and will be used by the play game method.
         """
+        if player.get_is_stacked() == True:
+            player.set_token_p_step_count(steps)
+            player.set_token_q_step_count(steps)
+        elif token_name == "p":
+            player.set_token_p_step_count(steps)
+        elif token_name == "q":
+            player.set_token_q_step_count(steps)
+
+        if (player.get_token_p_step_count() == -1) or (player.get_token_q_step_count() == -1):
+            player.set_is_stacked(False)
+        elif (player.get_p_space_name() == player.get_q_space_name()) and (player.get_token_p_step_count() > 0) and (player.get_token_q_step_step_count() > 0):
+            player.set_is_stacked(True)
 
 
 player_B = Player("B")
-player_B.set_token_p_step_count(63)
+player_B.set_token_p_step_count(57)
 print(player_B.get_p_space_name())
 
-
+game = LudoGame()
+print(game.get_players_list())
+print(game.get_turns_list())
+players = ["A", "B", "C"]
+turns = [('A', 6), ('A', 4), ('A', 5), ('A', 4), ('B', 6), ('B', 4), ('B', 1), ('B', 2), ('A', 6), ('A', 4), ('A', 6), ('A', 3), ('A', 5), ('A', 1), ('A', 5), ('A', 4)]
+game.play_game(players, turns)
+print(game.get_players_list())
+print(game.get_turns_list())
