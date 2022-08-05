@@ -372,9 +372,6 @@ class LudoGame:
             current_positions.append(str(player.get_q_space_name()))
         return current_positions
 
-
-
-
     def target_in_range(self, current_player, roll):
         """
         This method takes two parameters (current_player object, and roll) and returns True/False and which token is in range based on if a token is within range to return another player back to home or not
@@ -382,9 +379,11 @@ class LudoGame:
         for player in self.get_players_list():
             if player != current_player:
                 if (current_player.get_space_name(current_player.get_token_p_step_count()+roll) == player.get_space_name(player.get_token_p_step_count()+roll)) or (current_player.get_space_name(current_player.get_token_p_step_count()+roll) == player.get_space_name(player.get_token_q_step_count()+roll)):
-                    return True, "p"
+                    if current_player.get_token_p_step_count()+roll <= 50:
+                        return True, "p"
                 elif (current_player.get_space_name(current_player.get_token_q_step_count()+roll) == player.get_space_name(player.get_token_p_step_count()+roll)) or (current_player.get_space_name(current_player.get_token_q_step_count()+roll) == player.get_space_name(player.get_token_q_step_count()+roll)):
-                    return True, "q"
+                    if current_player.get_token_q_step_count()+roll <= 50:
+                        return True, "q"
         return False, None
 
 
