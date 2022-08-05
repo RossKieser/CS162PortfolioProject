@@ -361,9 +361,11 @@ class LudoGame:
                                     if current_player.get_space_name(current_player.get_token_q_step_count()) == player.get_space_name(player.get_token_q_step_count()):
                                         self.move_token(player, "q", "Home")
                         elif current_player.get_token_p_step_count() <= current_player.get_token_q_step_count():
-                            self.move_token(current_player, "p", current_roll)
+                            if current_player.get_p_space_name() != "H":
+                                self.move_token(current_player, "p", current_roll)
                         elif current_player.get_token_p_step_count() > current_player.get_token_q_step_count():     # Move whichever token is furthest from the end
-                            self.move_token(current_player, "q", current_roll)
+                            if current_player.get_q_space_name() != "H":
+                                self.move_token(current_player, "q", current_roll)
         current_positions = []
         for player in self.get_players_list():
             current_positions.append(player.get_p_space_name())
@@ -403,6 +405,7 @@ class LudoGame:
         it will move a single token along the board and update a tokens total steps, will kick out opponent as needed,
         and will be used by the play game method.
         """
+
         if player.get_is_stacked() == True:
             player.set_token_p_step_count(steps)
             player.set_token_q_step_count(steps)
@@ -414,9 +417,13 @@ class LudoGame:
         if (player.get_token_p_step_count() == 57) and (player.get_token_q_step_count() == 57):
             player.set_completed("Won")
 
-        if (player.get_token_p_step_count() == -1) or (player.get_token_q_step_count() == -1):
+        if (player.get_token_p_step_count() <= 0) or (player.get_token_q_step_count() <= 0):
             player.set_is_stacked(False)
-        elif (player.get_p_space_name() == player.get_q_space_name()) and (player.get_token_p_step_count() > 0) and (player.get_token_q_step_count() > 0):
+        elif (player.get_p_space_name() == player.get_q_space_name()):
             player.set_is_stacked(True)
+
+        print(player.get_p_space_name())
+        print(player.get_q_space_name())
+        print("")
 
 
