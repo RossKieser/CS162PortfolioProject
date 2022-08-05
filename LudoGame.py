@@ -368,8 +368,8 @@ class LudoGame:
                                 self.move_token(current_player, "q", current_roll)
         current_positions = []
         for player in self.get_players_list():
-            current_positions.append(player.get_p_space_name())
-            current_positions.append(player.get_q_space_name())
+            current_positions.append(str(player.get_p_space_name()))
+            current_positions.append(str(player.get_q_space_name()))
         return current_positions
 
 
