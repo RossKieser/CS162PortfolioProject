@@ -422,8 +422,8 @@ class LudoGame:
         elif (player.get_p_space_name() == player.get_q_space_name()):
             player.set_is_stacked(True)
 
-        print(player.get_p_space_name())
-        print(player.get_q_space_name())
-        print("")
+        #print(player.get_p_space_name())
+        #print(player.get_q_space_name())
+        #print("")
 
 
