@@ -305,6 +305,7 @@ class LudoGame:
         for turn in turn_list:                              # append each turn tuple (player, roll) to _turns_list data member
             self.get_turns_list().append(turn)
         for turn in self.get_turns_list():                  # iterate through every turn tuple in _turns_list
+            current_turn = turn
             current_player_position = turn[0]               # extract which player is currently moving from the turn tuple
             current_player = self.get_player_by_position(current_player_position)   # get the current player object via get_player_by_position
             if current_player != "Player not found!":                               # continue the current iteration only if an active player object is found
@@ -360,12 +361,12 @@ class LudoGame:
                                         self.move_token(player, "p", "Home")
                                     if current_player.get_space_name(current_player.get_token_q_step_count()) == player.get_space_name(player.get_token_q_step_count()):
                                         self.move_token(player, "q", "Home")
-                        elif current_player.get_token_p_step_count() <= current_player.get_token_q_step_count():
-                            if current_player.get_p_space_name() != "H":
-                                self.move_token(current_player, "p", current_roll)
-                        elif current_player.get_token_p_step_count() > current_player.get_token_q_step_count():     # Move whichever token is furthest from the end
-                            if current_player.get_q_space_name() != "H":
-                                self.move_token(current_player, "q", current_roll)
+                        elif current_player.get_token_p_step_count() <= current_player.get_token_q_step_count() and (current_player.get_p_space_name() != "H"):
+                            self.move_token(current_player, "p", current_roll)
+                        elif current_player.get_token_p_step_count() > current_player.get_token_q_step_count() and (current_player.get_q_space_name() != "H"):  # Move whichever token is furthest from the end
+                            self.move_token(current_player, "q", current_roll)
+                        elif current_player.get_p_space_name() != "H":
+                            self.move_token(current_player, "p", current_roll)
         current_positions = []
         for player in self.get_players_list():
             current_positions.append(str(player.get_p_space_name()))
@@ -385,8 +386,6 @@ class LudoGame:
                     if current_player.get_token_q_step_count()+roll <= 50:
                         return True, "q"
         return False, None
-
-
 
     def get_player_by_position(self, player_position):
         """
@@ -421,8 +420,12 @@ class LudoGame:
         elif (player.get_p_space_name() == player.get_q_space_name()):
             player.set_is_stacked(True)
 
-        #print(player.get_p_space_name())
-        #print(player.get_q_space_name())
-        #print("")
+        print(player.get_p_space_name())
+        print(player.get_q_space_name())
+        print("")
 
+players = ['A','B']
+turns = [('B', 6),('B', 4),('B', 5),('B', 4),('B', 4),('B', 3),('B', 4),('B', 5),('B', 4),('B', 4),('B', 5),('B', 4),('B', 1),('B',4),('B', 5),('B', 5),('B', 5)]
 
+game = LudoGame()
+print(game.play_game(players, turns))
