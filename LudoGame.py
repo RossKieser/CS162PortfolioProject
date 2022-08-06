@@ -420,12 +420,6 @@ class LudoGame:
         elif (player.get_p_space_name() == player.get_q_space_name()):
             player.set_is_stacked(True)
 
-        print(player.get_p_space_name())
-        print(player.get_q_space_name())
-        print("")
-
-players = ['A','B']
-turns = [('B', 6),('B', 4),('B', 5),('B', 4),('B', 4),('B', 3),('B', 4),('B', 5),('B', 4),('B', 4),('B', 5),('B', 4),('B', 1),('B',4),('B', 5),('B', 5),('B', 5)]
-
-game = LudoGame()
-print(game.play_game(players, turns))
+        #print(player.get_p_space_name())
+        #print(player.get_q_space_name())
+        #print("")
